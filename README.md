@@ -34,7 +34,9 @@ Aplicacion de escritorio para analizar compras por SKU y determinar su participa
 - **Rango de fechas**: Filtra por periodo con auto-formato dd/mm/aaaa
 - **Ordenamiento en Excel**: Los datos se exportan como **Tabla de Excel** con filtros y ordenamiento por cualquier columna (SKU, LINEA, CANTIDAD, SOLES, %)
 - **Sucursales**: Desglose opcional por sucursal por cliente
-- **Exportacion XLSX**: Un archivo por vendedor con una hoja por cliente, formato profesional con encabezados verdes, totales fijos y porcentajes como formula viva `=IFERROR()`
+- **Exportacion XLSX**: Un archivo por vendedor con una hoja por cliente identificada con ID, formato profesional con encabezados verdes, totales fijos y porcentajes como formula viva `=IFERROR()`
+- **Progreso por vendedor**: Barras de progreso individuales que se completan al finalizar cada archivo
+- **Tema moderno**: Paletas light/dark con efecto glassmorphism, accent G360 `#00d084`
 - **Version portable**: Carpeta autonoma para trasladar a cualquier PC con Windows
 
 ---
