@@ -426,6 +426,12 @@ class SelectionView:
             self.on_selection_ready(seleccion, lineas_sel=self.lineas_sel)
 
     def build(self) -> ft.Control:
+        glass_kw = dict(
+            padding=10, border_radius=10, expand=True,
+            bgcolor=self.p.glass_bg,
+            border=ft.BorderSide(1, self.p.glass_border),
+            blur=ft.Blur(12, 12),
+        )
         return ft.Column([
             ft.Text("1. Filtra por lineas  2. Elige un vendedor  3. Selecciona sus clientes", size=12, color=self.p.text_secondary),
             ft.Divider(height=8, color="transparent"),
@@ -435,16 +441,14 @@ class SelectionView:
                         ft.Text("LINEAS (filtro)", size=11, weight=ft.FontWeight.W_600, color=self.p.accent),
                         ft.Container(expand=True, content=self.lineas_container),
                     ], spacing=4, expand=True),
-                    padding=10, bgcolor=self.p.surface, border_radius=10, border=ft.BorderSide(1, self.p.border),
-                    expand=True,
+                    **glass_kw,
                 ),
                 ft.Container(
                     content=ft.Column([
                         ft.Text("VENDEDORES", size=11, weight=ft.FontWeight.W_600, color=self.p.accent),
                         ft.Container(expand=True, content=self.vendedores_container),
                     ], spacing=4, expand=True),
-                    padding=10, bgcolor=self.p.surface, border_radius=10, border=ft.BorderSide(1, self.p.border),
-                    expand=True,
+                    **glass_kw,
                 ),
             ], spacing=12, expand=True),
             ft.Divider(height=4, color="transparent"),
@@ -461,7 +465,10 @@ class SelectionView:
                         padding=ft.Padding(0, 6, 0, 6),
                     ),
                 ], spacing=4),
-                padding=10, bgcolor=self.p.surface, border_radius=10, border=ft.BorderSide(1, self.p.border),
+                padding=10, border_radius=10,
+                bgcolor=self.p.glass_bg,
+                border=ft.BorderSide(1, self.p.glass_border),
+                blur=ft.Blur(12, 12),
             ),
             ft.Divider(height=4, color="transparent"),
             ft.Row([self.resumen_container, self.btn_generar], spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER),

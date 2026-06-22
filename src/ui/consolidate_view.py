@@ -56,9 +56,10 @@ class ConsolidateView:
         self._progress_card = ft.Container(
             content=self._prog_col,
             padding=12,
-            bgcolor=self.p.surface,
             border_radius=10,
-            border=ft.BorderSide(1, self.p.border),
+            bgcolor=self.p.glass_bg,
+            border=ft.BorderSide(1, self.p.glass_border),
+            blur=ft.Blur(12, 12),
         )
 
         self.suc_switch = ft.Switch(value=False, active_color=self.p.accent)
@@ -237,6 +238,13 @@ class ConsolidateView:
             margin=ft.Margin(0, 0, 0, 12),
         )
 
+        glass_kw = dict(
+            padding=16, border_radius=10, expand=True,
+            bgcolor=self.p.glass_bg,
+            border=ft.BorderSide(1, self.p.glass_border),
+            blur=ft.Blur(12, 12),
+        )
+
         filtros = ft.Container(
             content=ft.Column([
                 ft.Text("FILTROS", size=11, weight=ft.FontWeight.W_600, color=self.p.accent),
@@ -248,9 +256,7 @@ class ConsolidateView:
                 ft.Text("Sucursales", size=11, color=self.p.text_secondary),
                 ft.Row([self.suc_label, self.suc_switch], spacing=8),
             ], spacing=4),
-            padding=16, bgcolor=self.p.surface, border_radius=10,
-            border=ft.BorderSide(1, self.p.border),
-            expand=True,
+            **glass_kw,
         )
 
         config = ft.Container(
@@ -259,9 +265,7 @@ class ConsolidateView:
                 ft.Divider(height=4, color="transparent"),
                 ft.Text("Los reportes se guardaran en el Escritorio.", size=11, color=self.p.text_secondary),
             ], spacing=4),
-            padding=16, bgcolor=self.p.surface, border_radius=10,
-            border=ft.BorderSide(1, self.p.border),
-            expand=True,
+            **glass_kw,
         )
 
         acciones = ft.Container(
@@ -276,8 +280,10 @@ class ConsolidateView:
                 ),
                 self._progress_card,
             ], spacing=4, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=16, bgcolor=self.p.surface, border_radius=10,
-            border=ft.BorderSide(1, self.p.border),
+            padding=16, border_radius=10,
+            bgcolor=self.p.glass_bg,
+            border=ft.BorderSide(1, self.p.glass_border),
+            blur=ft.Blur(12, 12),
         )
 
         return ft.Column([

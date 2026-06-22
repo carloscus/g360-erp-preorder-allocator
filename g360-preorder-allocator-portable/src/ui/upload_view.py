@@ -38,9 +38,10 @@ class UploadView:
                 ),
             ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=8),
             padding=40,
-            bgcolor=self.p.surface,
+            bgcolor=self.p.glass_bg,
             border_radius=18,
-            border=ft.BorderSide(2, self.p.border),
+            border=ft.BorderSide(2, self.p.glass_border),
+            blur=ft.Blur(12, 12),
             animate=ft.Animation(300, ft.AnimationCurve.DECELERATE),
             on_hover=lambda e: self._on_drop_hover(e),
         )
@@ -69,10 +70,10 @@ class UploadView:
         c = e.control
         if e.data == "true":
             c.border = ft.BorderSide(2, self.p.accent)
-            c.bgcolor = ft.Colors.with_opacity(0.05, self.p.accent)
+            c.bgcolor = ft.Colors.with_opacity(0.1, self.p.accent)
         else:
-            c.border = ft.BorderSide(2, self.p.border)
-            c.bgcolor = self.p.surface
+            c.border = ft.BorderSide(2, self.p.glass_border)
+            c.bgcolor = self.p.glass_bg
         c.update()
 
     def _pick_files_dialog(self):
@@ -102,8 +103,9 @@ class UploadView:
                             ft.Text("pendiente", size=10, color=self.p.text_secondary),
                         ], spacing=8),
                         padding=8,
-                        bgcolor=self.p.surface_hover,
+                        bgcolor=self.p.glass_bg,
                         border_radius=8,
+                        blur=ft.Blur(8, 8),
                     )
                 )
         self.btn_procesar.disabled = False
