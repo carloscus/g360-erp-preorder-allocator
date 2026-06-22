@@ -150,14 +150,8 @@ class SelectionView:
     def _guardar_seleccion_actual(self):
         if not self._modal_vid:
             return
-        sel = set()
-        if self._modal_list:
-            for container in self._modal_list.controls:
-                cb = container.content
-                if isinstance(cb, ft.Checkbox) and cb.value:
-                    sel.add(cb.label.split(" | ")[-1] if " | " in cb.label else cb.label)
-        if sel:
-            self.clientes_seleccion[self._modal_vid] = sel
+        if self._modal_temp_sel:
+            self.clientes_seleccion[self._modal_vid] = set(self._modal_temp_sel)
         elif self._modal_vid in self.clientes_seleccion:
             del self.clientes_seleccion[self._modal_vid]
 
@@ -364,15 +358,13 @@ class SelectionView:
         else:
             self._modal_temp_sel.discard(nom)
         self._actualizar_modal_counter()
+        if self._modal_counter:
+            self._modal_counter.update()
 
     def _actualizar_modal_counter(self):
-        if not self._modal_list or not self._modal_counter:
+        if not self._modal_counter:
             return
-        count = sum(
-            1 for c in self._modal_list.controls
-            if isinstance(getattr(c, "content", None), ft.Checkbox) and c.content.value
-        )
-        self._modal_counter.value = f"{count} seleccionados"
+        self._modal_counter.value = f"{len(self._modal_temp_sel)} seleccionados"
 
     def _modal_seleccionar_todo(self, val: bool):
         if not self._modal_list or not self._modal_vid:
@@ -404,7 +396,7 @@ class SelectionView:
 
             ven = self.vendedores_data.get(self._modal_vid)
             if ven:
-                self.btn_seleccionar_clientes.text = f"SELECCIONAR CLIENTES ({len(sel)}/{len(ven.clientes)})"
+                self.btn_seleccionar_clientes.text = f"SELECCIONAR CLIENTES ({len(self._modal_temp_sel)}/{len(ven.clientes)})"
 
         self._modal_vid = None
         self._actualizar_vendedores_ui()
