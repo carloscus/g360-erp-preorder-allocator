@@ -1,30 +1,79 @@
 # PreOrder Allocator
 
-Analisis de compras y participacion por SKU a partir de reportes ERP.
+> Analisis de compras y participacion por SKU a partir de reportes ERP
 
-## Flujo de uso
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
 
-1. **Carga** — Selecciona uno o mas archivos XLSX exportados del ERP
-2. **Seleccion** — Filtra por lineas de producto y selecciona vendedores/clientes
-3. **Consolidado** — Aplica filtros por rango de fechas, ordena por SKU/linea/% y exporta a XLSX
+---
 
-## Requisitos
+## Tabla de Contenidos
+
+- [Descripcion](#descripcion)
+- [Caracteristicas](#caracteristicas)
+- [Tecnologias](#tecnologias)
+- [Instalacion](#instalacion)
+- [Uso](#uso)
+- [Estructura](#estructura)
+- [Version Portable](#version-portable)
+- [Ecosistema G360](#ecosistema-g360)
+
+---
+
+## Descripcion
+
+Aplicacion de escritorio para analizar compras por SKU y determinar su participacion porcentual en las ventas totales de un periodo seleccionado. Carga reportes ERP en formato XLSX, permite filtrar por lineas de producto, vendedores, clientes y rango de fechas, y exporta un consolidado profesional por cliente.
+
+---
+
+## Caracteristicas
+
+- **Carga multiple**: Importa uno o mas archivos XLSX del ERP con deteccion automatica de encabezados
+- **Filtro por lineas**: Selecciona lineas de producto especificas para analizar
+- **Seleccion granular**: Elige vendedores y clientes individuales
+- **Rango de fechas**: Filtra por periodo con auto-formato dd/mm/aaaa
+- **Ordenamiento**: SKU (A-Z), % SOLES (mayor a menor), agrupado por linea
+- **Sucursales**: Desglose opcional por sucursal por cliente
+- **Exportacion XLSX**: Un archivo por vendedor con una hoja por cliente, formato profesional con encabezados verdes y totales
+- **Version portable**: Carpeta autonoma para trasladar a cualquier PC con Windows
+
+---
+
+## Tecnologias
+
+- **Core**: Python 3.11
+- **UI**: Flet (Flutter-based Python framework)
+- **Procesamiento**: Pandas
+- **Exportacion**: Openpyxl
+- **Runtime**: uv (gestor de paquetes Python)
+
+---
+
+## Instalacion
+
+### Requisitos
 
 - Windows 10+
-- Python 3.11
+- Python 3.11 (se instala automaticamente si no existe)
 - Conexion a internet (solo la primera ejecucion)
 
-## Instalacion y ejecucion
+### Pasos
 
 ```bash
-# Clonar o copiar la carpeta
+git clone https://github.com/carloscus/g360-erp-preorder-allocator.git
 cd g360-erp-preorder-allocator
-
-# Ejecutar (auto-instala uv, Python 3.11, .venv y dependencias)
 run.bat
 ```
 
-O manualmente con uv:
+Esto:
+
+1. Detecta o instala uv
+2. Detecta o instala Python 3.11 via uv
+3. Crea `.venv` con todas las dependencias
+4. Crea acceso directo en el escritorio
+5. Ejecuta la aplicacion
+
+### Manual
 
 ```bash
 uv venv .venv --python 3.11 --seed
@@ -32,9 +81,50 @@ uv sync
 .venv\Scripts\python.exe main.py
 ```
 
-## Version portable
+---
 
-La carpeta `g360-preorder-allocator-portable/` contiene los archivos minimos para trasladar a otra PC. Copia toda la carpeta, ejecuta `run.bat` y se auto-instala.
+## Uso
+
+La aplicacion sigue un flujo de 3 pasos:
+
+1. **Carga Masiva** — Selecciona archivos XLSX exportados del ERP. El parser detecta columnas automaticamente.
+2. **Seleccion** — Filtra por lineas de producto, elige un vendedor y selecciona sus clientes.
+3. **Consolidado** — Configura rango de fechas, orden y sucursales, luego exporta a XLSX.
+
+Los reportes se guardan en el Escritorio con el formato `G360_Consolidado_{vendedor}_{fecha}.xlsx`.
+
+---
+
+## Estructura
+
+```
+g360-erp-preorder-allocator/
+├── main.py                  # Entry point
+├── run.bat                  # Launcher auto-instalable (uv + Python 3.11)
+├── pyproject.toml           # Configuracion del proyecto
+├── sync_portable.py         # Sincroniza cambios a la version portable
+├── create_shortcut.vbs      # Acceso directo en escritorio
+├── INSTRUCCIONES.txt        # Instructivo para usuario final
+├── assets/images/           # Iconos y logos (CIPSA, G360)
+├── src/
+│   ├── app.py               # App Flet principal
+│   ├── core/
+│   │   ├── parser.py        # Parsing y normalizacion XLSX
+│   │   ├── models.py        # Modelos de datos (dataclasses)
+│   │   └── exporter.py      # Generacion XLSX consolidado
+│   └── ui/
+│       ├── upload_view.py   # Vista de carga de archivos
+│       ├── selection_view.py# Vista de seleccion vendedor/cliente
+│       ├── consolidate_view.py # Vista de filtros y exportacion
+│       └── theme.py         # Paletas de colores claro/oscuro
+└── g360-preorder-allocator-portable/  # Version portable
+```
+
+---
+
+## Version Portable
+
+La carpeta `g360-preorder-allocator-portable/` contiene los archivos minimos para trasladar a otra PC. Simplemente copia toda la carpeta, ejecuta `run.bat` y se auto-instala.
 
 Para sincronizar cambios desde el proyecto fuente:
 
@@ -42,25 +132,14 @@ Para sincronizar cambios desde el proyecto fuente:
 uv run python sync_portable.py
 ```
 
-## Estructura
+---
 
-```
-src/
-├── app.py                 # Punto de entrada Flet
-├── core/
-│   ├── parser.py          # Parsing XLSX ERP
-│   ├── models.py          # Modelos de datos
-│   └── exporter.py        # Exportacion XLSX consolidado
-└── ui/
-    ├── upload_view.py     # Carga de archivos
-    ├── selection_view.py  # Seleccion vendedor/cliente
-    ├── consolidate_view.py# Filtros y exportacion
-    └── theme.py           # Paletas de colores
-```
+## Ecosistema G360
 
-## Dependencias
+Este proyecto forma parte de la familia de microherramientas **G360** para apoyo CRM y gestion de datos en escritorio, enfocadas en areas como ventas, finanzas y logistica.
 
-- flet — UI framework
-- pandas — Procesamiento de datos
-- openpyxl — Exportacion XLSX
-- xlrd — Lectura XLS legacy
+**Marca**: G360
+**Isotipo**: 3 puntos verticales paralelos (gris-verde-gris) + chevron `>`
+**Autor**: Carlos Cusi
+**Desarrollo**: Con asistencia de herramientas de codigo IA (Vibe Code)
+**Powered by**: [g360-signature](https://github.com/carloscus/g360-signature)
