@@ -1,0 +1,5 @@
+# PreOrder Allocator - Dependencies
+# Generado automaticamente desde pyproject.toml
+flet>=0.23.0
+pandas>=2.2.0
+openpyxl>=3.1.0
