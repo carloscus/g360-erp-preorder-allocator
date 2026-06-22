@@ -157,52 +157,6 @@ class ConsolidateView:
         return result
 
     def _exportar(self):
-        fecha = datetime.now().strftime("%d%m%Y")
-        paths = []
-        for vid, vendedor in self.vendedores.items():
-            clientes = self.seleccion.get(vid, [])
-            if not clientes:
-                continue
-            nom_ven = re.sub(r'[<>:"/\\|?*]', '', vendedor.nom_vendedor).replace(" ", "_")[:20]
-            fname = f"G360_Consolidado_{nom_ven}_{fecha}.xlsx"
-            paths.append(os.path.join(str(Path.home() / "Desktop"), fname))
-
-        existentes = [p for p in paths if os.path.exists(p)]
-        if existentes:
-            self._mostrar_confirmar_sobrescribir(existentes)
-            return
-
-        self._ejecutar_exportar()
-
-    def _mostrar_confirmar_sobrescribir(self, existentes: list[str]):
-        lines = "\n".join(f"  • {os.path.basename(p)}" for p in existentes)
-        dialog = ft.AlertDialog(
-            title=ft.Text("Sobrescribir archivos?", size=16, weight=ft.FontWeight.W_700),
-            content=ft.Column([
-                ft.Text("Estos archivos ya existen en el Escritorio:", size=13),
-                ft.Text(lines, size=12, color=self.p.text_secondary),
-                ft.Text("", size=6),
-                ft.Text("Se sobrescribiran si continuas.", size=12, color=self.p.danger),
-            ], spacing=4, width=420),
-            actions=[
-                ft.TextButton("CANCELAR", on_click=lambda e: self._cerrar_dialogo(dialog)),
-                ft.FilledButton("SOBREESCRIBIR", on_click=lambda e: self._confirmar_y_exportar(dialog)),
-            ],
-            actions_alignment=ft.MainAxisAlignment.END,
-        )
-        self.page.show_dialog(dialog)
-        self.page.update()
-
-    def _cerrar_dialogo(self, dialog: ft.AlertDialog):
-        dialog.open = False
-        self.page.update()
-
-    def _confirmar_y_exportar(self, dialog: ft.AlertDialog):
-        dialog.open = False
-        self.page.update()
-        self._ejecutar_exportar()
-
-    def _ejecutar_exportar(self):
         self.progress.visible = True
         self.status.value = "Generando reportes..."
         self.status.color = self.p.accent
