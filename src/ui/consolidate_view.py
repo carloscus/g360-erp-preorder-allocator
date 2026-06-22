@@ -53,18 +53,6 @@ class ConsolidateView:
         self.status = ft.Text("", size=13, color=p.text_secondary)
         self.progress = ft.ProgressBar(width=400, color=p.accent, visible=False)
 
-        self.sort_dd = ft.Dropdown(
-            label="Orden",
-            value="sku",
-            options=[
-                ft.DropdownOption("sku", "SKU (A-Z)"),
-                ft.DropdownOption("pct", "% SOLES (mayor a menor)"),
-                ft.DropdownOption("linea", "Agrupado por linea"),
-            ],
-            width=220,
-        )
-        self.sort_dd.on_change = lambda e: self._on_sort_change(e)
-
         self.suc_switch = ft.Switch(value=False, active_color=self.p.accent)
         self.suc_label = ft.Text("Incluir sucursales", size=12, color=self.p.text_secondary)
 
@@ -91,13 +79,6 @@ class ConsolidateView:
     def _on_fecha_input(self, e, tf: ft.TextField):
         _auto_format_date(tf)
         self._on_fecha_change()
-
-    def _on_sort_change(self, e):
-        mode_names = {"sku": "SKU (A-Z)", "pct": "% SOLES (mayor a menor)", "linea": "Agrupado por linea"}
-        mode = e.control.value
-        total = sum(len(c) for c in self.seleccion.values())
-        self.status.value = f"Orden: {mode_names.get(mode, mode)} | {total} cliente(s)"
-        self.page.update()
 
     def _on_fecha_change(self):
         inicio = self.fecha_inicio.value.strip()
@@ -187,7 +168,6 @@ class ConsolidateView:
                     self.vendedores,
                     self.seleccion,
                     lineas_sel=self.lineas_sel,
-                    sort_mode=self.sort_dd.value,
                     carpeta=str(Path.home() / "Desktop"),
                     incluir_sucursales=self.suc_switch.value,
                     filter_items=self._items_en_rango,
@@ -241,8 +221,6 @@ class ConsolidateView:
         config = ft.Container(
             content=ft.Column([
                 ft.Text("CONFIGURACION", size=11, weight=ft.FontWeight.W_600, color=self.p.accent),
-                ft.Divider(height=4, color="transparent"),
-                self.sort_dd,
                 ft.Divider(height=4, color="transparent"),
                 ft.Text("Los reportes se guardaran en el Escritorio.", size=11, color=self.p.text_secondary),
             ], spacing=4),

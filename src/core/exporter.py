@@ -9,6 +9,7 @@ from typing import Optional
 
 import pandas as pd
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from src.core.models import VendedorResumen, ClienteResumen, ItemConsolidado
 
@@ -54,7 +55,7 @@ ESTILOS = {
 COLUMNAS = ["SKU", "NOM_ARTICULO", "LINEA", "CANTIDAD", "SOLES", "% CANT", "% SOLES"]
 
 
-def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_vendedor: str, sort_mode: str = "sku", used_names: set | None = None):
+def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_vendedor: str, used_names: set | None = None):
     sheet_name = _unique_sheet_name(nom_cliente[:31], used_names or set())
     df_hoja = df_hoja.groupby("SKU", as_index=False).agg({
         "NOM_ARTICULO": "first", "LINEA": "first",
@@ -68,12 +69,7 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
     else:
         df_hoja["% SOLES"] = 0.0
 
-    if sort_mode == "pct":
-        df_hoja = df_hoja.sort_values("% SOLES", ascending=False)
-    elif sort_mode == "linea":
-        df_hoja = df_hoja.sort_values(["LINEA", "SKU"], ascending=[True, True])
-    else:
-        df_hoja = df_hoja.sort_values("SKU", ascending=True)
+    df_hoja = df_hoja.sort_values(["LINEA", "SKU"], ascending=[True, True])
     df_hoja = df_hoja.reset_index(drop=True)
 
     n_data = len(df_hoja)
@@ -99,6 +95,18 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
     ws.cell(row=total_row, column=5).value = f"=SUM(E2:E{n_data+1})"
     ws.cell(row=total_row, column=6).value = 1.0
     ws.cell(row=total_row, column=7).value = 1.0
+
+    table_ref = f"A1:G{n_data+1}"
+    table_name = re.sub(r'[^a-zA-Z0-9_]', '', f"tbl_{sheet_name[:20]}")
+    tab = Table(displayName=table_name, ref=table_ref)
+    tab.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium9",
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False,
+    )
+    ws.add_table(tab)
 
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
@@ -169,7 +177,6 @@ def _unique_sheet_name(base: str, used: set) -> str:
 def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                   clientes_seleccionados: dict[str, list[str]],
                   lineas_sel: set[str] | None = None,
-                  sort_mode: str = "sku",
                   carpeta: Optional[str] = None,
                   incluir_sucursales: bool = False,
                   filter_items: Optional[callable] = None) -> list[str]:
@@ -217,7 +224,7 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                     })
 
                 df_hoja = pd.DataFrame(data)
-                _generar_hoja_cliente(writer, df_hoja, nom_cliente, vendedor.nom_vendedor, sort_mode=sort_mode, used_names=used_sheets)
+                _generar_hoja_cliente(writer, df_hoja, nom_cliente, vendedor.nom_vendedor, used_names=used_sheets)
 
                 if incluir_sucursales:
                     _generar_hoja_sucursales(writer, items, nom_cliente, used_names=used_sheets)
@@ -269,6 +276,20 @@ def _generar_hoja_sucursales(writer, items: list[ItemConsolidado], nom_cliente: 
     df_suc = pd.DataFrame(rows)
     df_suc.to_excel(writer, sheet_name=sheet_name, index=False, startrow=0)
     ws = writer.sheets[sheet_name]
+
+    ncols = len(df_suc.columns)
+    ncols_letter = get_column_letter(ncols)
+    table_ref = f"A1:{ncols_letter}{len(df_suc)}"
+    table_name = re.sub(r'[^a-zA-Z0-9_]', '', f"tbl_{sheet_name[:20]}")
+    tab = Table(displayName=table_name, ref=table_ref)
+    tab.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium9",
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False,
+    )
+    ws.add_table(tab)
 
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 

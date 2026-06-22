@@ -32,9 +32,9 @@ Aplicacion de escritorio para analizar compras por SKU y determinar su participa
 - **Filtro por lineas**: Selecciona lineas de producto especificas para analizar
 - **Seleccion granular**: Elige vendedores y clientes individuales
 - **Rango de fechas**: Filtra por periodo con auto-formato dd/mm/aaaa
-- **Ordenamiento**: SKU (A-Z), % SOLES (mayor a menor), agrupado por linea
+- **Ordenamiento en Excel**: Los datos se exportan como **Tabla de Excel** con filtros y ordenamiento por cualquier columna (SKU, LINEA, CANTIDAD, SOLES, %)
 - **Sucursales**: Desglose opcional por sucursal por cliente
-- **Exportacion XLSX**: Un archivo por vendedor con una hoja por cliente, formato profesional con encabezados verdes y totales
+- **Exportacion XLSX**: Un archivo por vendedor con una hoja por cliente, formato profesional con encabezados verdes, totales fijos y porcentajes como formula viva `=IFERROR()`
 - **Version portable**: Carpeta autonoma para trasladar a cualquier PC con Windows
 
 ---
@@ -89,7 +89,7 @@ La aplicacion sigue un flujo de 3 pasos:
 
 1. **Carga Masiva** — Selecciona archivos XLSX exportados del ERP. El parser detecta columnas automaticamente.
 2. **Seleccion** — Filtra por lineas de producto, elige un vendedor y selecciona sus clientes.
-3. **Consolidado** — Configura rango de fechas, orden y sucursales, luego exporta a XLSX.
+3. **Consolidado** — Configura rango de fechas y sucursales, luego exporta a XLSX. Los datos se exportan como **Tabla de Excel**: ordena y filtra directamente desde los encabezados.
 
 Los reportes se guardan en el Escritorio con el formato `G360_Consolidado_{vendedor}_{fecha}.xlsx`.
 
