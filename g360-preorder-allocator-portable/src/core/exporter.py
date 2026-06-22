@@ -193,7 +193,8 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                   lineas_sel: set[str] | None = None,
                   carpeta: Optional[str] = None,
                   incluir_sucursales: bool = False,
-                  filter_items: Optional[callable] = None) -> list[str]:
+                  filter_items: Optional[callable] = None,
+                  on_file_done: Optional[callable] = None) -> list[str]:
     if carpeta is None:
         carpeta = str(Path.home() / "Desktop")
 
@@ -247,6 +248,8 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
 
         generados.append(fpath)
         logger.info(f"Reporte generado: {fpath}")
+        if on_file_done:
+            on_file_done(vendedor.nom_vendedor)
 
     return generados
 

@@ -51,7 +51,15 @@ class ConsolidateView:
         self.lineas_sel: set[str] = set()
 
         self.status = ft.Text("", size=13, color=p.text_secondary)
-        self.progress = ft.ProgressBar(width=400, color=p.accent, visible=False)
+        self._prog_rows: dict[str, ft.Row] = {}
+        self._prog_col = ft.Column(spacing=6, visible=False)
+        self._progress_card = ft.Container(
+            content=self._prog_col,
+            padding=12,
+            bgcolor=self.p.surface,
+            border_radius=10,
+            border=ft.BorderSide(1, self.p.border),
+        )
 
         self.suc_switch = ft.Switch(value=False, active_color=self.p.accent)
         self.suc_label = ft.Text("Incluir sucursales", size=12, color=self.p.text_secondary)
@@ -157,10 +165,37 @@ class ConsolidateView:
         return result
 
     def _exportar(self):
-        self.progress.visible = True
-        self.status.value = "Generando reportes..."
+        vendedores_info = [
+            (vid, vendedor.nom_vendedor)
+            for vid, vendedor in self.vendedores.items()
+            if self.seleccion.get(vid, [])
+        ]
+        if not vendedores_info:
+            return
+
+        self._prog_rows.clear()
+        bars = []
+        for _, nombre in vendedores_info:
+            bar = ft.ProgressBar(width=380, color=self.p.accent, value=0)
+            row = ft.Row([
+                ft.Text(nombre, size=12, color=self.p.text, width=160),
+                bar,
+            ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+            self._prog_rows[nombre] = row
+            bars.append(bar)
+        self._prog_col.controls = list(self._prog_rows.values())
+        self._prog_col.visible = True
+
+        self.status.value = "Exportando..."
         self.status.color = self.p.accent
         self.page.update()
+
+        def on_file_done(nombre: str):
+            row = self._prog_rows.get(nombre)
+            if row:
+                bar = row.controls[1]
+                bar.value = 1.0
+                self.page.update()
 
         def task():
             try:
@@ -171,10 +206,10 @@ class ConsolidateView:
                     carpeta=str(Path.home() / "Desktop"),
                     incluir_sucursales=self.suc_switch.value,
                     filter_items=self._items_en_rango,
+                    on_file_done=on_file_done,
                 )
                 self.status.value = f"Reportes generados: {len(paths)} archivo(s)"
                 self.status.color = self.p.success
-                self.progress.visible = False
                 self.page.update()
 
                 if paths:
@@ -184,7 +219,7 @@ class ConsolidateView:
             except Exception as ex:
                 self.status.value = f"Error: {str(ex)}"
                 self.status.color = self.p.danger
-                self.progress.visible = False
+                self._prog_col.visible = False
                 self.page.update()
 
         threading.Thread(target=task, daemon=True).start()
@@ -239,7 +274,7 @@ class ConsolidateView:
                     on_click=lambda _: self._exportar(),
                     height=44,
                 ),
-                self.progress,
+                self._progress_card,
             ], spacing=4, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             padding=16, bgcolor=self.p.surface, border_radius=10,
             border=ft.BorderSide(1, self.p.border),
