@@ -53,6 +53,7 @@ class SelectionView:
         self._modal_list: ft.Column | None = None
         self._modal_counter: ft.Text | None = None
         self._modal_search_text: str = ""
+        self._modal_temp_sel: set[str] = set()
         self._modal_abierto: bool = False
 
     def set_data(self, df: pd.DataFrame):
@@ -255,7 +256,8 @@ class SelectionView:
             return
 
         self._modal_vid = vid
-        sel_count = len(self.clientes_seleccion.get(vid, set()))
+        self._modal_temp_sel = set(self.clientes_seleccion.get(vid, set()))
+        sel_count = len(self._modal_temp_sel)
 
         if self._modal_search is None:
             self._modal_search = ft.TextField(
@@ -328,7 +330,7 @@ class SelectionView:
             return
 
         query = query.lower().strip()
-        prev_sel = self.clientes_seleccion.get(self._modal_vid, set())
+        temp_sel = self._modal_temp_sel
 
         lineas_sel = self.lineas_sel
         todas_lineas = len(lineas_sel) == len(self._lineas_disponibles) if self._lineas_disponibles else True
@@ -341,17 +343,27 @@ class SelectionView:
                 lineas_cli = {f"{i.id_linea} - {i.nom_linea}" for i in cli.items}
                 if not (lineas_cli & lineas_sel):
                     continue
-            checked = nom_cli in prev_sel
+            checked = nom_cli in temp_sel
             label = f"{cli.doc_cliente} | {cli.id_cliente} | {cli.nom_cliente}"
             cb = ft.Checkbox(
                 label=label,
                 value=checked,
-                on_change=lambda _: self._actualizar_modal_counter(),
+                data=nom_cli,
+                on_change=lambda e: self._on_modal_check_change(e),
                 label_style=ft.TextStyle(size=13),
             )
             self._modal_list.controls.append(
                 ft.Container(content=cb, padding=ft.Padding(4, 0, 4, 2))
             )
+
+    def _on_modal_check_change(self, e):
+        cb = e.control
+        nom = cb.data
+        if cb.value:
+            self._modal_temp_sel.add(nom)
+        else:
+            self._modal_temp_sel.discard(nom)
+        self._actualizar_modal_counter()
 
     def _actualizar_modal_counter(self):
         if not self._modal_list or not self._modal_counter:
@@ -363,8 +375,12 @@ class SelectionView:
         self._modal_counter.value = f"{count} seleccionados"
 
     def _modal_seleccionar_todo(self, val: bool):
-        if not self._modal_list:
+        if not self._modal_list or not self._modal_vid:
             return
+        ven = self.vendedores_data.get(self._modal_vid)
+        if not ven:
+            return
+        self._modal_temp_sel = set(ven.clientes.keys()) if val else set()
         for container in self._modal_list.controls:
             cb = container.content
             if isinstance(cb, ft.Checkbox):
@@ -381,17 +397,8 @@ class SelectionView:
         self.page.pop_dialog()
 
         if confirmar and self._modal_vid:
-            sel = set()
-            if self._modal_list:
-                for container in self._modal_list.controls:
-                    cb = container.content
-                    if isinstance(cb, ft.Checkbox) and cb.value:
-                        label = cb.label
-                        parts = label.split(" | ")
-                        nom = parts[-1] if len(parts) >= 3 else label
-                        sel.add(nom)
-            if sel:
-                self.clientes_seleccion[self._modal_vid] = sel
+            if self._modal_temp_sel:
+                self.clientes_seleccion[self._modal_vid] = set(self._modal_temp_sel)
             elif self._modal_vid in self.clientes_seleccion:
                 del self.clientes_seleccion[self._modal_vid]
 
