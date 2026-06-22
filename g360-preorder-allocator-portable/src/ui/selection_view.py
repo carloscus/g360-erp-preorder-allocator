@@ -51,6 +51,8 @@ class SelectionView:
         self._modal_vid: str | None = None
         self._modal_search: ft.TextField | None = None
         self._modal_list: ft.Column | None = None
+        self._modal_counter: ft.Text | None = None
+        self._modal_search_text: str = ""
         self._modal_abierto: bool = False
 
     def set_data(self, df: pd.DataFrame):
@@ -253,23 +255,32 @@ class SelectionView:
             return
 
         self._modal_vid = vid
-        prev_sel = self.clientes_seleccion.get(vid, set())
+        sel_count = len(self.clientes_seleccion.get(vid, set()))
 
-        self._modal_search = ft.TextField(
-            hint_text="Buscar cliente por nombre...",
-            prefix_icon=ft.Icons.SEARCH,
-            on_change=lambda e: self._on_modal_search(e.control.value),
-            bgcolor=self.p.input_bg,
-            border_radius=8,
-            text_size=13,
-        )
+        if self._modal_search is None:
+            self._modal_search = ft.TextField(
+                hint_text="Buscar cliente por nombre...",
+                prefix_icon=ft.Icons.SEARCH,
+                on_change=lambda e: self._on_modal_search(e.control.value),
+                bgcolor=self.p.input_bg,
+                border_radius=8,
+                text_size=13,
+            )
+        self._modal_search.value = self._modal_search_text
 
-        self._modal_list = ft.Column(spacing=2, scroll=ft.ScrollMode.ADAPTIVE)
-        self._build_modal_clientes("")
+        if self._modal_list is None:
+            self._modal_list = ft.Column(spacing=2, scroll=ft.ScrollMode.ADAPTIVE)
+
+        if self._modal_counter is None:
+            self._modal_counter = ft.Text("0 seleccionados", size=11, color=self.p.accent)
+
+        self._modal_counter.value = f"{sel_count} seleccionados"
+        self._build_modal_clientes(self._modal_search_text)
 
         header = ft.Container(
             content=ft.Row([
                 ft.Text(f"{vid} - {ven.nom_vendedor}", size=11, color=self.p.text_secondary, expand=True),
+                self._modal_counter,
                 ft.TextButton("Todo", on_click=lambda _: self._modal_seleccionar_todo(True)),
                 ft.TextButton("Ninguno", on_click=lambda _: self._modal_seleccionar_todo(False)),
             ], spacing=4),
@@ -302,9 +313,11 @@ class SelectionView:
         self._modal_abierto = True
 
     def _on_modal_search(self, query: str):
+        self._modal_search_text = query
         self._build_modal_clientes(query)
         if self._modal_abierto:
             self._modal_list.update()
+            self._modal_counter.update()
 
     def _build_modal_clientes(self, query: str):
         if not self._modal_list or not self._modal_vid:
@@ -333,12 +346,21 @@ class SelectionView:
             cb = ft.Checkbox(
                 label=label,
                 value=checked,
-                on_change=lambda _: None,
+                on_change=lambda _: self._actualizar_modal_counter(),
                 label_style=ft.TextStyle(size=13),
             )
             self._modal_list.controls.append(
                 ft.Container(content=cb, padding=ft.Padding(4, 0, 4, 2))
             )
+
+    def _actualizar_modal_counter(self):
+        if not self._modal_list or not self._modal_counter:
+            return
+        count = sum(
+            1 for c in self._modal_list.controls
+            if isinstance(getattr(c, "content", None), ft.Checkbox) and c.content.value
+        )
+        self._modal_counter.value = f"{count} seleccionados"
 
     def _modal_seleccionar_todo(self, val: bool):
         if not self._modal_list:
@@ -348,8 +370,13 @@ class SelectionView:
             if isinstance(cb, ft.Checkbox):
                 cb.value = val
                 cb.update()
+        self._actualizar_modal_counter()
+        if self._modal_counter:
+            self._modal_counter.update()
 
     def _cerrar_modal(self, confirmar: bool):
+        if self._modal_search:
+            self._modal_search_text = self._modal_search.value
         self._modal_abierto = False
         self.page.pop_dialog()
 
