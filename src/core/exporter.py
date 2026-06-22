@@ -177,6 +177,9 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
         fpath = os.path.join(carpeta, fname)
 
         with pd.ExcelWriter(fpath, engine="openpyxl") as writer:
+            writer.book.properties.creator = "ccusi"
+            writer.book.properties.title = "PreOrder Allocator"
+            writer.book.properties.description = "Generado por G360"
             used_sheets: set[str] = set()
             for nom_cliente in sorted(clientes):
                 cliente = vendedor.clientes.get(nom_cliente)
