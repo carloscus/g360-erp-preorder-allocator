@@ -55,7 +55,7 @@ ESTILOS = {
 COLUMNAS = ["SKU", "NOM_ARTICULO", "LINEA", "CANTIDAD", "SOLES", "% CANT", "% SOLES"]
 
 
-def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_vendedor: str, used_names: set | None = None):
+def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_vendedor: str, used_names: set | None = None, used_tables: set[str] | None = None):
     sheet_name = _unique_sheet_name(nom_cliente[:31], used_names or set())
     df_hoja = df_hoja.groupby("SKU", as_index=False).agg({
         "NOM_ARTICULO": "first", "LINEA": "first",
@@ -97,7 +97,7 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
     ws.cell(row=total_row, column=7).value = 1.0
 
     table_ref = f"A1:G{n_data+1}"
-    table_name = re.sub(r'[^a-zA-Z0-9_]', '', f"tbl_{sheet_name[:20]}")
+    table_name = _unique_table_name(sheet_name, used_tables or set())
     tab = Table(displayName=table_name, ref=table_ref)
     tab.tableStyleInfo = TableStyleInfo(
         name="TableStyleMedium9",
@@ -174,6 +174,20 @@ def _unique_sheet_name(base: str, used: set) -> str:
     return name
 
 
+def _unique_table_name(sheet_name: str, used: set[str]) -> str:
+    base = re.sub(r'[^a-zA-Z0-9_]', '', f"tbl_{sheet_name}")[:80]
+    if base not in used:
+        used.add(base)
+        return base
+    i = 1
+    while True:
+        candidate = f"{base}_{i}"[:80]
+        if candidate not in used:
+            used.add(candidate)
+            return candidate
+        i += 1
+
+
 def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                   clientes_seleccionados: dict[str, list[str]],
                   lineas_sel: set[str] | None = None,
@@ -200,6 +214,7 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
             writer.book.properties.title = "PreOrder Allocator"
             writer.book.properties.description = "Generado por G360"
             used_sheets: set[str] = set()
+            used_tables: set[str] = set()
             for nom_cliente in sorted(clientes):
                 cliente = vendedor.clientes.get(nom_cliente)
                 if not cliente or not cliente.items:
@@ -224,10 +239,10 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                     })
 
                 df_hoja = pd.DataFrame(data)
-                _generar_hoja_cliente(writer, df_hoja, nom_cliente, vendedor.nom_vendedor, used_names=used_sheets)
+                _generar_hoja_cliente(writer, df_hoja, nom_cliente, vendedor.nom_vendedor, used_names=used_sheets, used_tables=used_tables)
 
                 if incluir_sucursales:
-                    _generar_hoja_sucursales(writer, items, nom_cliente, used_names=used_sheets)
+                    _generar_hoja_sucursales(writer, items, nom_cliente, used_names=used_sheets, used_tables=used_tables)
 
         generados.append(fpath)
         logger.info(f"Reporte generado: {fpath}")
@@ -235,7 +250,7 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
     return generados
 
 
-def _generar_hoja_sucursales(writer, items: list[ItemConsolidado], nom_cliente: str, used_names: set | None = None):
+def _generar_hoja_sucursales(writer, items: list[ItemConsolidado], nom_cliente: str, used_names: set | None = None, used_tables: set[str] | None = None):
     suc_data = {}
     for it in items:
         cod = it.cod_sucursal or "S/N"
@@ -280,7 +295,7 @@ def _generar_hoja_sucursales(writer, items: list[ItemConsolidado], nom_cliente: 
     ncols = len(df_suc.columns)
     ncols_letter = get_column_letter(ncols)
     table_ref = f"A1:{ncols_letter}{len(df_suc)}"
-    table_name = re.sub(r'[^a-zA-Z0-9_]', '', f"tbl_{sheet_name[:20]}")
+    table_name = _unique_table_name(sheet_name, used_tables or set())
     tab = Table(displayName=table_name, ref=table_ref)
     tab.tableStyleInfo = TableStyleInfo(
         name="TableStyleMedium9",
