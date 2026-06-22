@@ -206,12 +206,8 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
             continue
 
         nom_ven = re.sub(r'[<>:"/\\|?*]', '', vendedor.nom_vendedor).replace(" ", "_")[:20]
-        base = f"G360_Consolidado_{nom_ven}_{fecha}"
-        fpath = os.path.join(carpeta, f"{base}.xlsx")
-        i = 1
-        while os.path.exists(fpath):
-            fpath = os.path.join(carpeta, f"{base}({i}).xlsx")
-            i += 1
+        fname = f"G360_Consolidado_{nom_ven}_{fecha}.xlsx"
+        fpath = os.path.join(carpeta, fname)
 
         with pd.ExcelWriter(fpath, engine="openpyxl") as writer:
             writer.book.properties.creator = "ccusi"
