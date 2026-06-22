@@ -238,11 +238,12 @@ def exportar_xlsx(por_vendedor: dict[str, VendedorResumen],
                         "SOLES": item.soles,
                     })
 
+                sheet_label = f"{cliente.id_cliente}-{nom_cliente}"
                 df_hoja = pd.DataFrame(data)
-                _generar_hoja_cliente(writer, df_hoja, nom_cliente, vendedor.nom_vendedor, used_names=used_sheets, used_tables=used_tables)
+                _generar_hoja_cliente(writer, df_hoja, sheet_label, vendedor.nom_vendedor, used_names=used_sheets, used_tables=used_tables)
 
                 if incluir_sucursales:
-                    _generar_hoja_sucursales(writer, items, nom_cliente, used_names=used_sheets, used_tables=used_tables)
+                    _generar_hoja_sucursales(writer, items, sheet_label, used_names=used_sheets, used_tables=used_tables)
 
         generados.append(fpath)
         logger.info(f"Reporte generado: {fpath}")
