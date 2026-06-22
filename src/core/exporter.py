@@ -61,13 +61,7 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
         "CANTIDAD": "sum", "SOLES": "sum",
     })
 
-    total_cant = df_hoja["CANTIDAD"].sum()
     total_soles = df_hoja["SOLES"].sum()
-
-    if total_cant > 0:
-        df_hoja["% CANT"] = df_hoja["CANTIDAD"] / total_cant
-    else:
-        df_hoja["% CANT"] = 0.0
 
     if total_soles > 0:
         df_hoja["% SOLES"] = df_hoja["SOLES"] / total_soles
@@ -82,17 +76,29 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
         df_hoja = df_hoja.sort_values("SKU", ascending=True)
     df_hoja = df_hoja.reset_index(drop=True)
 
-    df_out = df_hoja[COLUMNAS].copy()
-    total_row = pd.DataFrame([{
-        "SKU": "TOTAL", "NOM_ARTICULO": "", "LINEA": "",
-        "CANTIDAD": int(total_cant), "SOLES": round(total_soles, 2),
-        "% CANT": 1.0, "% SOLES": 1.0,
-    }])
-    df_out = pd.concat([df_out, total_row], ignore_index=True)
+    n_data = len(df_hoja)
+    total_row = n_data + 2
 
+    BASE_COLUMNAS = ["SKU", "NOM_ARTICULO", "LINEA", "CANTIDAD", "SOLES"]
+    df_out = df_hoja[BASE_COLUMNAS].copy()
     df_out.to_excel(writer, sheet_name=sheet_name, index=False, startrow=0)
     ws = writer.sheets[sheet_name]
-    libro = writer.book
+
+    ws.cell(row=1, column=6, value="% CANT")
+    ws.cell(row=1, column=7, value="% SOLES")
+
+    for i in range(n_data):
+        r = i + 2
+        ws.cell(row=r, column=6).value = f"=IFERROR(D{r}/D${total_row}, 0)"
+        ws.cell(row=r, column=7).value = f"=IFERROR(E{r}/E${total_row}, 0)"
+
+    ws.cell(row=total_row, column=1, value="TOTAL")
+    ws.cell(row=total_row, column=2, value="")
+    ws.cell(row=total_row, column=3, value="")
+    ws.cell(row=total_row, column=4).value = f"=SUM(D2:D{n_data+1})"
+    ws.cell(row=total_row, column=5).value = f"=SUM(E2:E{n_data+1})"
+    ws.cell(row=total_row, column=6).value = 1.0
+    ws.cell(row=total_row, column=7).value = 1.0
 
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
@@ -118,23 +124,29 @@ def _generar_hoja_cliente(writer, df_hoja: pd.DataFrame, nom_cliente: str, nom_v
         cell.alignment = hdr_align
         cell.border = hdr_border
 
-    for row_idx in range(2, len(df_out) + 2):
-        is_total = row_idx == len(df_out) + 1
+    for row_idx in range(2, n_data + 2):
         for col_idx, col_name in enumerate(COLUMNAS, 1):
             cell = ws.cell(row=row_idx, column=col_idx)
-            if is_total:
-                cell.font = total_font
-                cell.fill = total_fill
-                cell.border = total_border
-            else:
-                cell.border = data_border
-                if col_name in ("% CANT", "% SOLES"):
-                    cell.alignment = pct_align
-                    cell.number_format = "0.00%"
-                elif col_name == "SOLES":
-                    cell.number_format = "#,##0.00"
-                elif col_name == "CANTIDAD":
-                    cell.number_format = "#,##0"
+            cell.border = data_border
+            if col_name in ("% CANT", "% SOLES"):
+                cell.alignment = pct_align
+                cell.number_format = "0.00%"
+            elif col_name == "SOLES":
+                cell.number_format = "#,##0.00"
+            elif col_name == "CANTIDAD":
+                cell.number_format = "#,##0"
+
+    for col_idx, col_name in enumerate(COLUMNAS, 1):
+        cell = ws.cell(row=total_row, column=col_idx)
+        cell.font = total_font
+        cell.fill = total_fill
+        cell.border = total_border
+        if col_name in ("% CANT", "% SOLES"):
+            cell.number_format = "0.00%"
+        elif col_name == "SOLES":
+            cell.number_format = "#,##0.00"
+        elif col_name == "CANTIDAD":
+            cell.number_format = "#,##0"
 
     ws.freeze_panes = "A2"
     widths = [15, 45, 20, 12, 14, 10, 10]
